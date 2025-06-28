@@ -2023,7 +2023,6 @@
             container.innerHTML = '';
             
             preguntasPorArea.forEach((pregunta, index) => {
-                const preguntaId = pregunta.id;
                 const preguntaElement = document.createElement('div');
                 preguntaElement.className = 'pregunta-card';
                 preguntaElement.innerHTML = `
@@ -2085,40 +2084,38 @@
                     });
                 });
                 
-                const cameraPreview = document.getElementById(`camera-preview-${preguntaId}`);
-                const cameraInput = document.getElementById(`camera-input-${preguntaId}`);
+                const cameraPreview = document.getElementById(`camera-preview-${pregunta.id}`);
+                const cameraInput = document.getElementById(`camera-input-${pregunta.id}`);
                 
                 cameraPreview.addEventListener('click', function() {
                     cameraInput.click();
                 });
+                
+                // Capturamos el id de la pregunta en una variable local
+                const currentPreguntaId = pregunta.id;
                 
                 cameraInput.addEventListener('change', async function(e) {
                     if (e.target.files && e.target.files[0]) {
                         const file = e.target.files[0];
                         const reader = new FileReader();
                         
-                        // Mostrar spinner de carga
-                        cameraPreview.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
-                        
                         reader.onload = async function(event) {
+                            cameraPreview.innerHTML = `<img src="${event.target.result}" alt="Evidencia fotográfica">`;
+                            
                             try {
-                                // Comprimir imagen (reducir calidad)
-                                const compressedImg = await compressImage(event.target.result, 70);
-                                
                                 const response = await fetch(SCRIPT_URL, {
                                     method: 'POST',
                                     body: JSON.stringify({
                                         action: "uploadImage",
-                                        image: compressedImg.split(',')[1] // Solo la parte base64
+                                        image: event.target.result.split(',')[1] // Solo la parte base64
                                     })
                                 });
                                 
                                 const data = await response.json();
                                 
                                 if (data.status === "success") {
-                                    if (!respuestas[preguntaId]) respuestas[preguntaId] = {};
-                                    respuestas[preguntaId].evidenciaUrl = data.url;
-                                    cameraPreview.innerHTML = `<img src="${compressedImg}" alt="Evidencia fotográfica">`;
+                                    if (!respuestas[currentPreguntaId]) respuestas[currentPreguntaId] = {};
+                                    respuestas[currentPreguntaId].evidenciaUrl = data.url;
                                 } else {
                                     throw new Error(data.message || "Error al subir imagen");
                                 }
@@ -2135,28 +2132,10 @@
                     }
                 });
                 
-                document.getElementById(`observaciones-${preguntaId}`).addEventListener('input', function(e) {
-                    if (!respuestas[preguntaId]) respuestas[preguntaId] = {};
-                    respuestas[preguntaId].observaciones = e.target.value;
+                document.getElementById(`observaciones-${pregunta.id}`).addEventListener('input', function(e) {
+                    if (!respuestas[pregunta.id]) respuestas[pregunta.id] = {};
+                    respuestas[pregunta.id].observaciones = e.target.value;
                 });
-            });
-        }
-        
-        // Función para comprimir imágenes
-        function compressImage(dataUrl, quality) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    
-                    resolve(canvas.toDataURL('image/jpeg', quality / 100));
-                };
-                img.src = dataUrl;
             });
         }
         
@@ -2486,17 +2465,14 @@
         function updateUserBar() {
             const userNameElement = document.getElementById('user-name');
             const userPhoto = document.getElementById('user-photo');
-            const profilePhoto = document.getElementById('profile-picture');
             
             if (currentUser) {
                 userNameElement.textContent = currentUser.name;
                 
                 if (currentUser.fotoPerfil) {
                     userPhoto.src = currentUser.fotoPerfil;
-                    if (profilePhoto) profilePhoto.src = currentUser.fotoPerfil;
                 } else {
                     userPhoto.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
-                    if (profilePhoto) profilePhoto.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
                 }
             }
         }
@@ -2515,9 +2491,10 @@
                 const data = await response.json();
                 
                 if (data.status === "success") {
+                    // Actualizar currentUser con los datos del perfil
                     currentUser = { ...currentUser, ...data.user };
-                    updateUserBar();
                     
+                    // Actualizar UI
                     document.getElementById('profile-name').textContent = data.user.name;
                     document.getElementById('profile-email').textContent = data.user.email;
                     document.getElementById('edit-name').value = data.user.name;
@@ -2525,7 +2502,11 @@
                     
                     if (data.user.fotoPerfil) {
                         document.getElementById('profile-picture').src = data.user.fotoPerfil;
+                    } else {
+                        document.getElementById('profile-picture').src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
                     }
+                    
+                    updateUserBar();
                 } else {
                     throw new Error(data.message);
                 }
@@ -2562,14 +2543,11 @@
                     
                     reader.onload = async function(event) {
                         try {
-                            // Comprimir imagen antes de subir
-                            const compressedImg = await compressImage(event.target.result, 80);
-                            
                             const response = await fetch(SCRIPT_URL, {
                                 method: 'POST',
                                 body: JSON.stringify({
                                     action: "uploadImage",
-                                    image: compressedImg.split(',')[1]
+                                    image: event.target.result.split(',')[1] // Solo la parte base64
                                 })
                             });
                             
@@ -2620,6 +2598,11 @@
                     currentUser.name = name;
                     currentUser.unidad = unidad;
                     currentUser.fotoPerfil = fotoUrl;
+                    
+                    // Actualizar fotos inmediatamente
+                    document.getElementById('profile-picture').src = fotoUrl;
+                    document.getElementById('user-photo').src = fotoUrl;
+                    
                     updateUserBar();
                     document.getElementById('profile-photo').value = '';
                 } else {

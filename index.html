@@ -1041,6 +1041,7 @@
                     </ul>
                 </nav>
                 <div class="user-info">
+                    <img id="user-photo" src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" alt="Foto perfil">
                     <span id="user-name">Usuario</span>
                     <button id="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </div>
@@ -1139,24 +1140,6 @@
                         </div>
                         
                         <div class="filtro-item">
-                            <label for="filtro-area">Filtrar por Área</label>
-                            <select id="filtro-area">
-                                <option value="">Todas las áreas</option>
-                                <option value="batey">Batey</option>
-                                <option value="molinos">Molinos</option>
-                                <option value="clarificacion">Clarificación</option>
-                                <option value="evaporacion">Evaporación</option>
-                                <option value="cristalizacion">Cristalización</option>
-                                <option value="centrifugas">Centrifugas</option>
-                                <option value="secado">Secado</option>
-                                <option value="envase">Envase</option>
-                                <option value="calderas">Calderas</option>
-                                <option value="almacen_pt">Almacén PT</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Nuevo filtro por unidad -->
-                        <div class="filtro-item">
                             <label for="filtro-unidad">Filtrar por Unidad</label>
                             <select id="filtro-unidad">
                                 <option value="">Todas las unidades</option>
@@ -1167,6 +1150,14 @@
                                 <option value="dulcinea_chiapas">Dulcinea - Chiapas</option>
                                 <option value="dulcinea_michoacan">Dulcinea Michoacán</option>
                                 <option value="cafetalera_cordoba">Cafetalera - Cordoba</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filtro-item">
+                            <label for="filtro-area">Filtrar por Área</label>
+                            <select id="filtro-area">
+                                <option value="">Todas las áreas</option>
+                                <!-- Las áreas se cargarán dinámicamente -->
                             </select>
                         </div>
                         
@@ -1621,6 +1612,7 @@
             
             // Event listener para cambio de unidad (carga áreas)
             document.getElementById('unidad-negocio').addEventListener('change', cargarAreasPorUnidad);
+            document.getElementById('filtro-unidad').addEventListener('change', cargarAreasPorUnidadDashboard);
             
             // Inicializar gráficos vacíos
             inicializarGraficos();
@@ -2469,13 +2461,16 @@
         // Actualizar barra de usuario con foto
         function updateUserBar() {
             const userNameElement = document.getElementById('user-name');
-            if (currentUser && currentUser.fotoPerfil) {
-                userNameElement.innerHTML = `
-                    <img id="user-photo" src="${currentUser.fotoPerfil}" alt="Foto perfil">
-                    ${currentUser.name}
-                `;
-            } else {
+            const userPhoto = document.getElementById('user-photo');
+            
+            if (currentUser) {
                 userNameElement.textContent = currentUser.name;
+                
+                if (currentUser.fotoPerfil) {
+                    userPhoto.src = currentUser.fotoPerfil;
+                } else {
+                    userPhoto.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+                }
             }
         }
 
@@ -2519,6 +2514,11 @@
 
         // Guardar cambios del perfil
         document.getElementById('save-profile').addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+            
             const name = document.getElementById('edit-name').value;
             const unidad = document.getElementById('profile-unidad').value;
             const fileInput = document.getElementById('profile-photo');
@@ -2526,6 +2526,8 @@
             
             if (!name) {
                 showProfileMessage('El nombre es obligatorio', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
                 return;
             }
             
@@ -2550,26 +2552,30 @@
                             
                             if (data.status === "success") {
                                 fotoUrl = data.url;
-                                await saveProfile(name, unidad, fotoUrl);
+                                await saveProfile(name, unidad, fotoUrl, btn, originalText);
                             } else {
                                 throw new Error(data.message);
                             }
                         } catch (error) {
                             showProfileMessage('Error al subir foto: ' + error.message, 'error');
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
                         }
                     };
                     
                     reader.readAsDataURL(file);
                 } else {
                     // Guardar sin cambiar foto
-                    await saveProfile(name, unidad, fotoUrl);
+                    await saveProfile(name, unidad, fotoUrl, btn, originalText);
                 }
             } catch (error) {
                 showProfileMessage('Error: ' + error.message, 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
 
-        async function saveProfile(name, unidad, fotoUrl) {
+        async function saveProfile(name, unidad, fotoUrl, btn, originalText) {
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
@@ -2596,22 +2602,34 @@
                 }
             } catch (error) {
                 showProfileMessage('Error al actualizar perfil: ' + error.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
         // Cambiar contraseña
         document.getElementById('change-password').addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            btn.disabled = true;
+            
             const currentPassword = document.getElementById('current-password').value;
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
             if (!currentPassword || !newPassword || !confirmPassword) {
                 showProfileMessage('Todos los campos son obligatorios', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
                 return;
             }
             
             if (newPassword !== confirmPassword) {
                 showProfileMessage('Las contraseñas no coinciden', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
                 return;
             }
             
@@ -2638,6 +2656,9 @@
                 }
             } catch (error) {
                 showProfileMessage('Error al cambiar contraseña: ' + error.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
 
@@ -2693,7 +2714,46 @@
             }
         }
 
-        // Función para formatear nombres (ya existente, pero se asegura)
+        // Obtener áreas por unidad para dashboard
+        async function cargarAreasPorUnidadDashboard() {
+            const unidad = document.getElementById('filtro-unidad').value;
+            const areaSelect = document.getElementById('filtro-area');
+            
+            if (!unidad) {
+                areaSelect.innerHTML = '<option value="">Todas las áreas</option>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "getAreasByUnidad",
+                        unidad: unidad
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === "success") {
+                    areaSelect.innerHTML = '<option value="">Todas las áreas</option>';
+                    data.areas.forEach(area => {
+                        const nombreArea = formatName(area);
+                        const option = document.createElement('option');
+                        option.value = area;
+                        option.textContent = nombreArea;
+                        areaSelect.appendChild(option);
+                    });
+                } else {
+                    throw new Error(data.message || "Error al cargar áreas");
+                }
+            } catch (error) {
+                console.error('Error al cargar áreas:', error);
+                areaSelect.innerHTML = '<option value="">Error al cargar áreas</option>';
+            }
+        }
+
+        // Función para formatear nombres
         function formatName(str) {
             if (!str) return "";
             return str.split('_')

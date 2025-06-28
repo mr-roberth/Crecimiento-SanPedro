@@ -283,11 +283,6 @@
             color: white;
         }
         
-        .btn-secondary {
-            background: linear-gradient(135deg, var(--secondary) 0%, #8e44ad 100%);
-            color: white;
-        }
-        
         /* Preguntas modernas */
         .pregunta-card {
             background: var(--card-bg);
@@ -1227,6 +1222,21 @@
                                 <canvas id="chart-preguntas"></canvas>
                             </div>
                         </div>
+
+                        <!-- Nuevos gráficos de radar -->
+                        <div class="chart-container">
+                            <h3 class="chart-title"><i class="fas fa-radar"></i> Incumplimiento por Área</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-radar-areas"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h3 class="chart-title"><i class="fas fa-radar"></i> Cumplimiento por Categoría</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-radar-categorias"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1286,7 +1296,7 @@
                                 <div>
                                     <p><strong>Auditor:</strong> <span id="reporte-auditor">-</span></p>
                                     <p><strong>Unidad:</strong> <span id="reporte-unidad">-</span></p>
-                                    <p><strong>Área auditada:</strong> <span id="reporte-area">-</span></p>
+                                    <p><strong>Área:</strong> <span id="reporte-area">-</span></p>
                                     <p><strong>Fecha:</strong> <span id="reporte-fecha">-</span></p>
                                     <p><strong>Hora:</strong> <span id="reporte-hora">-</span></p>
                                 </div>
@@ -1506,11 +1516,13 @@
         // Variables globales
         let auditorData = {};
         let respuestas = {};
-        let chartDistribucion, chartPreguntas;
+        let chartDistribucion, chartPreguntas, chartRadarAreas, chartRadarCategorias;
         let currentUser = null;
         let reportesData = [];
         let preguntasPorArea = [];
         let areasCache = {};
+        let allAreas = [];
+        let auditores = [];
         
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
@@ -1535,11 +1547,11 @@
                     if (page === 'dashboard') {
                         cargarDashboard();
                     } else if (page === 'reportes') {
-                        cargarReportes();
-                        cargarAreasSelect('filtro-area-reporte');
+                        cargarTodasLasAreas();
                         cargarAuditores();
+                        cargarReportes();
                     } else if (page === 'exportar') {
-                        cargarAreasSelect('area-exportar');
+                        cargarTodasLasAreas();
                     } else if (page === 'cuenta') {
                         loadProfile();
                     }
@@ -1607,6 +1619,10 @@
             
             // Inicializar gráficos vacíos
             inicializarGraficos();
+            
+            // Cargar todas las áreas al iniciar
+            cargarTodasLasAreas();
+            cargarAuditores();
         });
         
         // Función para visualizar PDF
@@ -1679,6 +1695,73 @@
                     chartPreguntas.data.labels = data.preguntasData.labels;
                     chartPreguntas.data.datasets[0].data = data.preguntasData.values;
                     chartPreguntas.update();
+                    
+                    // Actualizar gráficos de radar
+                    if (chartRadarAreas) chartRadarAreas.destroy();
+                    if (chartRadarCategorias) chartRadarCategorias.destroy();
+                    
+                    const ctxRadarAreas = document.getElementById('chart-radar-areas').getContext('2d');
+                    chartRadarAreas = new Chart(ctxRadarAreas, {
+                        type: 'radar',
+                        data: {
+                            labels: data.radarAreas.labels,
+                            datasets: [{
+                                label: 'Incumplimiento %',
+                                data: data.radarAreas.data,
+                                backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                                borderColor: 'rgba(231, 76, 60, 1)',
+                                pointBackgroundColor: 'rgba(231, 76, 60, 1)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgba(231, 76, 60, 1)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    min: 0,
+                                    max: 100,
+                                    ticks: {
+                                        stepSize: 20
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    const ctxRadarCategorias = document.getElementById('chart-radar-categorias').getContext('2d');
+                    chartRadarCategorias = new Chart(ctxRadarCategorias, {
+                        type: 'radar',
+                        data: {
+                            labels: data.radarCategorias.labels,
+                            datasets: [{
+                                label: 'Cumplimiento %',
+                                data: data.radarCategorias.data,
+                                backgroundColor: 'rgba(39, 174, 96, 0.2)',
+                                borderColor: 'rgba(39, 174, 96, 1)',
+                                pointBackgroundColor: 'rgba(39, 174, 96, 1)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgba(39, 174, 96, 1)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    min: 0,
+                                    max: 100,
+                                    ticks: {
+                                        stepSize: 20
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
                 } else {
                     throw new Error(data.message || "Error al cargar datos");
                 }
@@ -2787,36 +2870,41 @@
             }
         }
         
-        // Cargar áreas en un select
-        function cargarAreasSelect(selectId) {
-            const areaSelect = document.getElementById(selectId);
-            areaSelect.innerHTML = '<option value="">Todas las áreas</option>';
-            
-            // Agregar áreas de todas las unidades
-            const allAreas = new Set();
-            Object.values(areasCache).forEach(areas => {
-                areas.forEach(area => allAreas.add(area));
-            });
-            
-            allAreas.forEach(area => {
-                const option = document.createElement('option');
-                option.value = area;
-                option.textContent = formatName(area);
-                areaSelect.appendChild(option);
-            });
+        // Cargar todas las áreas
+        async function cargarTodasLasAreas() {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "getAllAreas"
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === "success") {
+                    allAreas = data.areas;
+                    
+                    // Actualizar selects de áreas
+                    llenarSelectAreas('filtro-area-reporte', allAreas);
+                    llenarSelectAreas('area-exportar', allAreas);
+                    llenarSelectAreas('filtro-area', allAreas);
+                }
+            } catch (error) {
+                console.error('Error cargando todas las áreas:', error);
+            }
         }
         
-        // Renderizar áreas en select
-        function renderAreasSelect(selectElement, areas, allOption = false) {
-            selectElement.innerHTML = allOption 
-                ? '<option value="">Todas las áreas</option>' 
-                : '<option value="">Selecciona un área</option>';
+        // Llenar select con áreas
+        function llenarSelectAreas(selectId, areas) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Todas las áreas</option>';
             
             areas.forEach(area => {
                 const option = document.createElement('option');
                 option.value = area;
                 option.textContent = formatName(area);
-                selectElement.appendChild(option);
+                select.appendChild(option);
             });
         }
         
@@ -2833,9 +2921,11 @@
                 const data = await response.json();
                 
                 if (data.status === "success") {
+                    auditores = data.auditores;
                     const select = document.getElementById('filtro-auditor-reporte');
                     select.innerHTML = '<option value="">Todos los auditores</option>';
-                    data.auditores.forEach(auditor => {
+                    
+                    auditores.forEach(auditor => {
                         const option = document.createElement('option');
                         option.value = auditor;
                         option.textContent = auditor;
@@ -2853,6 +2943,20 @@
             return str.split('_')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                 .join(' ');
+        }
+        
+        // Renderizar áreas en select
+        function renderAreasSelect(selectElement, areas, allOption = false) {
+            selectElement.innerHTML = allOption 
+                ? '<option value="">Todas las áreas</option>' 
+                : '<option value="">Selecciona un área</option>';
+            
+            areas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = formatName(area);
+                selectElement.appendChild(option);
+            });
         }
     </script>
 </body>

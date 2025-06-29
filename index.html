@@ -949,6 +949,23 @@
             margin-right: 10px;
             border: 2px solid white;
         }
+
+        /* Nuevo estilo para gráficos radar */
+        .radar-charts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .radar-chart-container {
+            flex: 1;
+            min-width: 300px;
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
     </style>
 </head>
 <body>
@@ -1223,18 +1240,20 @@
                             </div>
                         </div>
 
-                        <!-- Nuevos gráficos de radar -->
-                        <div class="chart-container">
-                            <h3 class="chart-title"><i class="fas fa-radar"></i> Incumplimiento por Área</h3>
-                            <div class="chart-wrapper">
-                                <canvas id="chart-radar-areas"></canvas>
+                        <!-- Nuevos gráficos de radar - lado a lado -->
+                        <div class="radar-charts">
+                            <div class="radar-chart-container">
+                                <h3 class="chart-title"><i class="fas fa-radar"></i> Incumplimiento por Área</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="chart-radar-areas"></canvas>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="chart-container">
-                            <h3 class="chart-title"><i class="fas fa-radar"></i> Cumplimiento por Categoría</h3>
-                            <div class="chart-wrapper">
-                                <canvas id="chart-radar-categorias"></canvas>
+                            
+                            <div class="radar-chart-container">
+                                <h3 class="chart-title"><i class="fas fa-radar"></i> Cumplimiento por Categoría</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="chart-radar-categorias"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1250,9 +1269,15 @@
                         <div class="filtros-reportes">
                             <h3><i class="fas fa-filter"></i> Filtros</h3>
                             
+                            <!-- Filtros de fecha mejorados -->
                             <div class="form-group">
-                                <label for="filtro-fecha-reporte">Fecha de Auditoría</label>
-                                <input type="date" id="filtro-fecha-reporte">
+                                <label for="filtro-fecha-inicio-reporte">Fecha Inicio</label>
+                                <input type="date" id="filtro-fecha-inicio-reporte">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="filtro-fecha-fin-reporte">Fecha Fin</label>
+                                <input type="date" id="filtro-fecha-fin-reporte">
                             </div>
                             
                             <div class="form-group">
@@ -1529,6 +1554,8 @@
             // Configurar fecha actual
             const today = new Date();
             document.getElementById('fecha-auditoria').valueAsDate = today;
+            document.getElementById('filtro-fecha-inicio-reporte').valueAsDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('filtro-fecha-fin-reporte').valueAsDate = today;
             document.getElementById('fecha-inicio-exportar').valueAsDate = new Date(today.getFullYear(), today.getMonth(), 1);
             document.getElementById('fecha-fin-exportar').valueAsDate = today;
             
@@ -2366,7 +2393,8 @@
         async function cargarReportes() {
             const loader = document.getElementById('reportes-loader');
             const content = document.getElementById('lista-reportes-content');
-            const fecha = document.getElementById('filtro-fecha-reporte').value;
+            const fechaInicio = document.getElementById('filtro-fecha-inicio-reporte').value;
+            const fechaFin = document.getElementById('filtro-fecha-fin-reporte').value;
             const area = document.getElementById('filtro-area-reporte').value;
             const auditor = document.getElementById('filtro-auditor-reporte').value;
             
@@ -2378,7 +2406,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         action: "getAuditsForReport",
-                        fecha: fecha,
+                        fechaInicio: fechaInicio,
+                        fechaFin: fechaFin,
                         area: area,
                         auditor: auditor
                     })

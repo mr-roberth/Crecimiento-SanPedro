@@ -1240,20 +1240,11 @@
                             </div>
                         </div>
 
-                        <!-- Nuevos gráficos de barras horizontales -->
-                        <div class="horizontal-bars">
-                            <div class="bar-chart-container">
-                                <h3 class="chart-title"><i class="fas fa-chart-bar"></i> Cumplimiento por Categoría</h3>
-                                <div class="chart-wrapper">
-                                    <canvas id="chart-barras-categorias"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="bar-chart-container">
-                                <h3 class="chart-title"><i class="fas fa-chart-bar"></i> Cumplimiento por Área</h3>
-                                <div class="chart-wrapper">
-                                    <canvas id="chart-barras-areas"></canvas>
-                                </div>
+                        <!-- Nuevo gráfico de barras horizontales para áreas -->
+                        <div class="chart-container">
+                            <h3 class="chart-title"><i class="fas fa-chart-bar"></i> Cumplimiento por Área</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-barras-areas"></canvas>
                             </div>
                         </div>
                     </div>
@@ -1541,7 +1532,7 @@
         // Variables globales
         let auditorData = {};
         let respuestas = {};
-        let chartDistribucion, chartPreguntas, chartBarrasCategorias, chartBarrasAreas;
+        let chartDistribucion, chartPreguntas, chartBarrasAreas;
         let currentUser = null;
         let reportesData = [];
         let preguntasPorArea = [];
@@ -1719,34 +1710,35 @@
                     ];
                     chartDistribucion.update();
                     
-                    chartPreguntas.data.labels = data.preguntasData.labels;
-                    chartPreguntas.data.datasets[0].data = data.preguntasData.values;
-                    chartPreguntas.update();
-                    
-                    // Actualizar gráficos de barras horizontales
-                    if (chartBarrasCategorias) chartBarrasCategorias.destroy();
-                    if (chartBarrasAreas) chartBarrasAreas.destroy();
-                    
-                    // Gráfico de barras horizontales para categorías
-                    const ctxBarrasCategorias = document.getElementById('chart-barras-categorias').getContext('2d');
-                    chartBarrasCategorias = new Chart(ctxBarrasCategorias, {
+                    // Actualizar gráfico de preguntas
+                    if (chartPreguntas) chartPreguntas.destroy();
+                    const ctxPreguntas = document.getElementById('chart-preguntas').getContext('2d');
+                    chartPreguntas = new Chart(ctxPreguntas, {
                         type: 'bar',
                         data: {
-                            labels: data.barrasCategorias.labels,
+                            labels: data.preguntasData.labels,
                             datasets: [{
-                                label: 'Cumplimiento %',
-                                data: data.barrasCategorias.data,
+                                label: '% Cumplimiento',
+                                data: data.preguntasData.values,
                                 backgroundColor: 'rgba(78, 84, 200, 0.8)',
-                                borderColor: 'rgba(78, 84, 200, 1)',
                                 borderWidth: 1
                             }]
                         },
                         options: {
-                            indexAxis: 'y',
                             responsive: true,
                             maintainAspectRatio: false,
                             scales: {
                                 x: {
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                            size: 10
+                                        }
+                                    }
+                                },
+                                y: {
                                     beginAtZero: true,
                                     max: 100,
                                     ticks: {
@@ -1759,7 +1751,8 @@
                         }
                     });
                     
-                    // Gráfico de barras horizontales para áreas
+                    // Actualizar gráfico de áreas
+                    if (chartBarrasAreas) chartBarrasAreas.destroy();
                     const ctxBarrasAreas = document.getElementById('chart-barras-areas').getContext('2d');
                     chartBarrasAreas = new Chart(ctxBarrasAreas, {
                         type: 'bar',
@@ -2380,15 +2373,47 @@
                     scales: {
                         x: {
                             ticks: {
-                                // Rotar las etiquetas y ajustar tamaño de fuente
-                                maxRotation: 90,
-                                minRotation: 90,
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
                                 font: {
-                                    size: 8 // Ajustar según necesidad
+                                    size: 10
                                 }
                             }
                         },
                         y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de barras horizontales para áreas
+            const ctxBarrasAreas = document.getElementById('chart-barras-areas').getContext('2d');
+            chartBarrasAreas = new Chart(ctxBarrasAreas, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Cumplimiento %',
+                        data: [],
+                        backgroundColor: 'rgba(39, 174, 96, 0.8)',
+                        borderColor: 'rgba(39, 174, 96, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
                             beginAtZero: true,
                             max: 100,
                             ticks: {
@@ -2877,16 +2902,18 @@
         // Obtener áreas por unidad para dashboard
         async function cargarAreasPorUnidadDashboard(unidad) {
             const areaSelect = document.getElementById('filtro-area');
-            
-            if (!unidad) {
-                areaSelect.innerHTML = '<option value="">Todas las áreas</option>';
-                return;
-            }
+            areaSelect.innerHTML = '<option value="">Cargando áreas...</option>';
             
             try {
                 // Verificar caché
                 if (areasCache[unidad]) {
-                    renderAreasSelect(areaSelect, areasCache[unidad], true);
+                    areaSelect.innerHTML = '<option value="">Todas las áreas</option>';
+                    areasCache[unidad].forEach(area => {
+                        const option = document.createElement('option');
+                        option.value = area;
+                        option.textContent = formatName(area);
+                        areaSelect.appendChild(option);
+                    });
                     return;
                 }
                 
@@ -2902,7 +2929,13 @@
                 
                 if (data.status === "success") {
                     areasCache[unidad] = data.areas;
-                    renderAreasSelect(areaSelect, data.areas, true);
+                    areaSelect.innerHTML = '<option value="">Todas las áreas</option>';
+                    data.areas.forEach(area => {
+                        const option = document.createElement('option');
+                        option.value = area;
+                        option.textContent = formatName(area);
+                        areaSelect.appendChild(option);
+                    });
                 } else {
                     throw new Error(data.message || "Error al cargar áreas");
                 }
@@ -2930,7 +2963,6 @@
                     // Actualizar selects de áreas
                     llenarSelectAreas('filtro-area-reporte', allAreas);
                     llenarSelectAreas('area-exportar', allAreas);
-                    llenarSelectAreas('filtro-area', allAreas);
                 }
             } catch (error) {
                 console.error('Error cargando todas las áreas:', error);
@@ -2988,10 +3020,8 @@
         }
         
         // Renderizar áreas en select
-        function renderAreasSelect(selectElement, areas, allOption = false) {
-            selectElement.innerHTML = allOption 
-                ? '<option value="">Todas las áreas</option>' 
-                : '<option value="">Selecciona un área</option>';
+        function renderAreasSelect(selectElement, areas) {
+            selectElement.innerHTML = '<option value="">Selecciona un área</option>';
             
             areas.forEach(area => {
                 const option = document.createElement('option');

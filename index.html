@@ -1676,7 +1676,7 @@
             }
         }
 
-        // Cargar dashboard con filtros
+       // Función para cargar dashboard con manejo de errores mejorado
         async function cargarDashboard() {
             const loader = document.getElementById('dashboard-loader');
             const content = document.getElementById('dashboard-content');
@@ -1789,17 +1789,17 @@
                         }
                     });
                     
-                } else {
+               } else {
                     throw new Error(data.message || "Error al cargar datos");
                 }
             } catch (error) {
-                alert('Error al cargar datos del dashboard: ' + error.message);
+                console.error("Error en dashboard:", error);
+                alert('Error al cargar datos: ' + error.message);
             } finally {
                 loader.style.display = 'none';
                 content.style.opacity = '1';
             }
         }
-
         // Función para finalizar auditoría con cálculo corregido de porcentajes
         async function finalizarAuditoria() {
             const btn = document.getElementById('finalizar-auditoria');

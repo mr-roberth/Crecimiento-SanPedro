@@ -76,38 +76,33 @@
             margin-top: 2rem;
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
         }
 
         button {
-            background-color: rgba(50, 50, 150, 0.7);
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             color: white;
             border: none;
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
+            padding: 1.2rem 3rem;
+            font-size: 1.4rem;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
             border: 2px solid rgba(100, 100, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
         }
 
         button:hover {
-            background-color: rgba(70, 70, 200, 0.9);
-            transform: scale(1.05);
+            background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+            transform: scale(1.05) translateY(-3px);
             border-color: rgba(150, 150, 255, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
         }
 
-        .refresh-btn {
-            background-color: rgba(50, 150, 50, 0.7);
-            border-color: rgba(100, 255, 100, 0.3);
-        }
-
-        .refresh-btn:hover {
-            background-color: rgba(70, 200, 70, 0.9);
-            border-color: rgba(150, 255, 150, 0.5);
+        button:active {
+            transform: scale(0.98) translateY(0);
         }
 
         .info {
@@ -120,25 +115,28 @@
             z-index: 2;
         }
 
-        .particle-count {
-            margin-top: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+        .glow {
+            animation: glow 2s ease-in-out infinite alternate;
         }
 
-        .particle-count span {
-            color: #aaa;
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #6a11cb, 0 0 20px #6a11cb, 0 0 25px #6a11cb;
+            }
+            to {
+                text-shadow: 0 0 10px #fff, 0 0 20px #2575fc, 0 0 30px #2575fc, 0 0 40px #2575fc, 0 0 50px #2575fc;
+            }
         }
 
-        .particle-count input {
-            width: 80px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 5px;
-            border-radius: 5px;
+        .counter {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .counter span {
+            color: #6a11cb;
+            font-weight: 600;
         }
 
         @media (max-width: 768px) {
@@ -151,8 +149,8 @@
             }
             
             button {
-                padding: 0.8rem 1.5rem;
-                font-size: 1rem;
+                padding: 1rem 2.5rem;
+                font-size: 1.2rem;
             }
         }
 
@@ -165,14 +163,9 @@
                 font-size: 1rem;
             }
             
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            
             button {
-                width: 100%;
-                max-width: 300px;
+                padding: 0.9rem 2rem;
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -184,22 +177,21 @@
     <!-- Contenedor principal para la frase -->
     <div class="container">
         <div class="phrase-container">
-            <h1 id="phrase">Cargando frase...</h1>
+            <h1 id="phrase" class="glow">Cargando frase...</h1>
             <div id="author" class="author"></div>
         </div>
         
         <div class="controls">
-            <button id="newPhrase" class="refresh-btn">Nueva Frase</button>
-            <button id="shareBtn">Compartir Frase</button>
-            <div class="particle-count">
-                <span>Partículas:</span>
-                <input type="number" id="particleNumber" min="10" max="200" value="80">
-            </div>
+            <button id="newPhrase">Probar suerte</button>
+        </div>
+        
+        <div class="counter">
+            Frases mostradas: <span id="counter">0</span>
         </div>
     </div>
     
     <div class="info">
-        Las partículas interactúan con tu cursor. Mueve el mouse para ver el efecto.
+        Haz clic en cualquier parte o mueve el cursor para interactuar con las partículas.
     </div>
 
     <!-- Scripts -->
@@ -221,82 +213,112 @@
             { text: "La vida es 10% lo que me ocurre y 90% cómo reacciono a ello.", author: "Charles Swindoll" },
             { text: "Cada día es una nueva oportunidad para cambiar tu vida.", author: "Anónimo" },
             { text: "La imaginación es más importante que el conocimiento.", author: "Albert Einstein" },
-            { text: "El futuro pertenece a quienes creen en la belleza de sus sueños.", author: "Eleanor Roosevelt" }
+            { text: "El futuro pertenece a quienes creen en la belleza de sus sueños.", author: "Eleanor Roosevelt" },
+            { text: "La única forma de hacer un gran trabajo es amar lo que haces.", author: "Steve Jobs" },
+            { text: "Sé el cambio que quieres ver en el mundo.", author: "Mahatma Gandhi" },
+            { text: "Lo que no te mata, te hace más fuerte.", author: "Friedrich Nietzsche" },
+            { text: "La educación es el arma más poderosa para cambiar el mundo.", author: "Nelson Mandela" },
+            { text: "La libertad no es la ausencia de compromisos, sino la capacidad de elegir.", author: "Paulo Coelho" },
+            { text: "La duda es el principio de la sabiduría.", author: "Aristóteles" },
+            { text: "La simplicidad es la máxima sofisticación.", author: "Leonardo da Vinci" },
+            { text: "La paciencia es amarga, pero su fruto es dulce.", author: "Jean-Jacques Rousseau" },
+            { text: "La verdadera sabiduría está en reconocer la propia ignorancia.", author: "Sócrates" },
+            { text: "El arte de la vida es el arte de evitar el dolor.", author: "Thomas Jefferson" },
+            { text: "La mayor gloria no es no caer nunca, sino levantarse cada vez que caemos.", author: "Confucio" },
+            { text: "La belleza comienza en el momento en que decides ser tú mismo.", author: "Coco Chanel" },
+            { text: "El único riesgo es no tomar ningún riesgo.", author: "Mark Zuckerberg" },
+            { text: "La disciplina es el puente entre metas y logros.", author: "Jim Rohn" },
+            { text: "El conocimiento es poder.", author: "Francis Bacon" },
+            { text: "La perseverancia es la clave del éxito.", author: "Benjamin Franklin" },
+            { text: "La suerte es lo que sucede cuando la preparación encuentra la oportunidad.", author: "Séneca" },
+            { text: "La confianza en sí mismo es el primer secreto del éxito.", author: "Ralph Waldo Emerson" },
+            { text: "La gratitud transforma lo que tenemos en suficiente.", author: "Anónimo" },
+            { text: "La paz interior comienza en el momento en que decides no permitir que otra persona o evento controle tus emociones.", author: "Pema Chödrön" }
         ];
 
         // Elementos del DOM
         const phraseElement = document.getElementById('phrase');
         const authorElement = document.getElementById('author');
         const newPhraseButton = document.getElementById('newPhrase');
-        const shareButton = document.getElementById('shareBtn');
-        const particleNumberInput = document.getElementById('particleNumber');
+        const counterElement = document.getElementById('counter');
 
-        // Variable para almacenar la frase actual
+        // Variables para control
         let currentPhrase = null;
+        let phraseHistory = [];
+        let counter = 0;
 
-        // Función para obtener una frase aleatoria
+        // Función para obtener una frase aleatoria que no se haya mostrado recientemente
         function getRandomPhrase() {
-            const randomIndex = Math.floor(Math.random() * phrases.length);
+            let randomIndex;
+            let attempts = 0;
+            const maxAttempts = 20; // Para evitar bucle infinito
+            
+            // Si hay muchas frases en el historial, permitimos repetir algunas
+            const maxHistory = Math.min(phrases.length - 5, 15);
+            
+            do {
+                randomIndex = Math.floor(Math.random() * phrases.length);
+                attempts++;
+                
+                // Si hemos intentado demasiadas veces, limpiamos el historial
+                if (attempts > maxAttempts) {
+                    phraseHistory = phraseHistory.slice(-5); // Mantenemos solo las últimas 5
+                    break;
+                }
+                
+            } while (phraseHistory.length < maxHistory && phraseHistory.includes(randomIndex));
+            
+            // Agregamos a historial si no está vacío
+            if (phraseHistory.length >= maxHistory) {
+                phraseHistory.shift(); // Quitamos la más antigua
+            }
+            
+            phraseHistory.push(randomIndex);
             return phrases[randomIndex];
         }
 
         // Función para mostrar una frase aleatoria
         function displayRandomPhrase() {
             currentPhrase = getRandomPhrase();
-            phraseElement.textContent = `"${currentPhrase.text}"`;
-            authorElement.textContent = `- ${currentPhrase.author}`;
             
-            // Animación de aparición
+            // Animación de desvanecimiento
             phraseElement.style.opacity = 0;
             authorElement.style.opacity = 0;
             
             setTimeout(() => {
+                phraseElement.textContent = `"${currentPhrase.text}"`;
+                authorElement.textContent = `- ${currentPhrase.author}`;
+                
+                // Animación de aparición
                 phraseElement.style.transition = 'opacity 0.5s ease';
                 authorElement.style.transition = 'opacity 0.5s ease';
                 phraseElement.style.opacity = 1;
                 authorElement.style.opacity = 1;
-            }, 10);
+                
+                // Actualizar contador
+                counter++;
+                counterElement.textContent = counter;
+                
+                // Efecto de resplandor intermitente
+                phraseElement.classList.remove('glow');
+                void phraseElement.offsetWidth; // Trigger reflow
+                phraseElement.classList.add('glow');
+            }, 300);
         }
 
-        // Función para compartir la frase
-        function sharePhrase() {
-            if (currentPhrase && navigator.share) {
-                navigator.share({
-                    title: 'Frase Inspiradora',
-                    text: `${currentPhrase.text} - ${currentPhrase.author}`,
-                    url: window.location.href
-                }).catch(err => {
-                    console.log('Error al compartir:', err);
-                    copyToClipboard();
-                });
-            } else {
-                copyToClipboard();
-            }
-        }
-
-        // Función para copiar al portapapeles
-        function copyToClipboard() {
-            const textToCopy = `${currentPhrase.text} - ${currentPhrase.author}`;
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                alert('¡Frase copiada al portapapeles!');
-            }).catch(err => {
-                console.error('Error al copiar:', err);
-            });
-        }
-
-        // Inicializar partículas
-        function initParticles(particleCount = 80) {
+        // Inicializar partículas con más cantidad
+        function initParticles() {
             particlesJS("particles-js", {
                 particles: {
                     number: {
-                        value: particleCount,
+                        value: 180, // Aumentado a 180 partículas
                         density: {
                             enable: true,
                             value_area: 800
                         }
                     },
                     color: {
-                        value: ["#ffffff", "#4fc3f7", "#4db6ac", "#f06292", "#ba68c8"]
+                        value: ["#ffffff", "#4fc3f7", "#4db6ac", "#f06292", "#ba68c8", "#ffd54f", "#81c784", "#ff8a65"]
                     },
                     shape: {
                         type: "circle",
@@ -306,7 +328,7 @@
                         }
                     },
                     opacity: {
-                        value: 0.7,
+                        value: 0.8,
                         random: true,
                         anim: {
                             enable: true,
@@ -321,20 +343,20 @@
                         anim: {
                             enable: true,
                             speed: 2,
-                            size_min: 0.3,
+                            size_min: 0.5,
                             sync: false
                         }
                     },
                     line_linked: {
                         enable: true,
-                        distance: 150,
+                        distance: 140,
                         color: "#4fc3f7",
-                        opacity: 0.4,
-                        width: 1
+                        opacity: 0.5,
+                        width: 1.2
                     },
                     move: {
                         enable: true,
-                        speed: 2,
+                        speed: 2.5,
                         direction: "none",
                         random: true,
                         straight: false,
@@ -352,7 +374,7 @@
                     events: {
                         onhover: {
                             enable: true,
-                            mode: "grab"
+                            mode: ["grab", "bubble"]
                         },
                         onclick: {
                             enable: true,
@@ -362,13 +384,20 @@
                     },
                     modes: {
                         grab: {
-                            distance: 140,
+                            distance: 160,
                             line_linked: {
                                 opacity: 1
                             }
                         },
+                        bubble: {
+                            distance: 200,
+                            size: 6,
+                            duration: 2,
+                            opacity: 0.8,
+                            speed: 3
+                        },
                         push: {
-                            particles_nb: 4
+                            particles_nb: 8
                         }
                     }
                 },
@@ -376,34 +405,39 @@
             });
         }
 
-        // Actualizar número de partículas
-        function updateParticleCount() {
-            const particleCount = parseInt(particleNumberInput.value);
-            if (particleCount >= 10 && particleCount <= 200) {
-                // Destruir partículas actuales
-                if (window.pJSDom && window.pJSDom.length > 0) {
-                    window.pJSDom[0].pJS.fn.vendors.destroy();
-                }
-                
-                // Inicializar con nuevo número
-                initParticles(particleCount);
-            } else {
-                particleNumberInput.value = 80;
-            }
-        }
-
         // Event Listeners
         newPhraseButton.addEventListener('click', displayRandomPhrase);
-        shareButton.addEventListener('click', sharePhrase);
-        particleNumberInput.addEventListener('change', updateParticleCount);
         
         // Al hacer clic en cualquier parte de la pantalla, también se cambia la frase
         document.body.addEventListener('click', function(e) {
-            // Solo cambia la frase si no se hizo clic en un botón o en el input
-            if (!e.target.closest('button') && !e.target.closest('input')) {
+            // Solo cambia la frase si no se hizo clic en el botón
+            if (e.target.id !== 'newPhrase') {
                 displayRandomPhrase();
             }
         });
+
+        // Efecto de sonido opcional (sutil)
+        function playClickSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 523.25; // Nota Do
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                // Silenciar error si el navegador no soporta AudioContext
+            }
+        }
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
@@ -413,8 +447,22 @@
             // Inicializar partículas
             initParticles();
             
-            // Cambiar frase automáticamente cada 30 segundos
-            setInterval(displayRandomPhrase, 30000);
+            // Cambiar frase automáticamente cada 25 segundos
+            setInterval(displayRandomPhrase, 25000);
+            
+            // Agregar sonido al botón
+            newPhraseButton.addEventListener('click', playClickSound);
+            
+            // Efecto especial al pasar el cursor sobre el botón
+            newPhraseButton.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05) translateY(-3px)';
+            });
+            
+            newPhraseButton.addEventListener('mouseleave', function() {
+                if (document.activeElement !== this) {
+                    this.style.transform = 'scale(1) translateY(0)';
+                }
+            });
         });
     </script>
 </body>

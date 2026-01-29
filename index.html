@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frases Aleatorias con Partículas</title>
+    <title>MrRoberth</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         * {
@@ -61,7 +61,7 @@
             font-weight: 800;
             line-height: 1.2;
             margin-bottom: 1rem;
-            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            color: #ffffff;
         }
 
         .author {
@@ -115,30 +115,6 @@
             z-index: 2;
         }
 
-        .glow {
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from {
-                text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #6a11cb, 0 0 20px #6a11cb, 0 0 25px #6a11cb;
-            }
-            to {
-                text-shadow: 0 0 10px #fff, 0 0 20px #2575fc, 0 0 30px #2575fc, 0 0 40px #2575fc, 0 0 50px #2575fc;
-            }
-        }
-
-        .counter {
-            margin-top: 1.5rem;
-            font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .counter span {
-            color: #6a11cb;
-            font-weight: 600;
-        }
-
         @media (max-width: 768px) {
             #phrase {
                 font-size: 2.5rem;
@@ -177,21 +153,17 @@
     <!-- Contenedor principal para la frase -->
     <div class="container">
         <div class="phrase-container">
-            <h1 id="phrase" class="glow">Cargando frase...</h1>
+            <h1 id="phrase">Cargando frase...</h1>
             <div id="author" class="author"></div>
         </div>
         
         <div class="controls">
             <button id="newPhrase">Probar suerte</button>
         </div>
-        
-        <div class="counter">
-            Frases mostradas: <span id="counter">0</span>
-        </div>
     </div>
     
     <div class="info">
-        Haz clic en cualquier parte o mueve el cursor para interactuar con las partículas.
+        Creador - Roberto Hernández Gómez (Lerdo de tejada, Veracruz).
     </div>
 
     <!-- Scripts -->
@@ -240,12 +212,10 @@
         const phraseElement = document.getElementById('phrase');
         const authorElement = document.getElementById('author');
         const newPhraseButton = document.getElementById('newPhrase');
-        const counterElement = document.getElementById('counter');
 
         // Variables para control
         let currentPhrase = null;
         let phraseHistory = [];
-        let counter = 0;
 
         // Función para obtener una frase aleatoria que no se haya mostrado recientemente
         function getRandomPhrase() {
@@ -294,15 +264,6 @@
                 authorElement.style.transition = 'opacity 0.5s ease';
                 phraseElement.style.opacity = 1;
                 authorElement.style.opacity = 1;
-                
-                // Actualizar contador
-                counter++;
-                counterElement.textContent = counter;
-                
-                // Efecto de resplandor intermitente
-                phraseElement.classList.remove('glow');
-                void phraseElement.offsetWidth; // Trigger reflow
-                phraseElement.classList.add('glow');
             }, 300);
         }
 
@@ -416,29 +377,6 @@
             }
         });
 
-        // Efecto de sonido opcional (sutil)
-        function playClickSound() {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = 523.25; // Nota Do
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.2);
-            } catch (e) {
-                // Silenciar error si el navegador no soporta AudioContext
-            }
-        }
-
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
             // Mostrar primera frase
@@ -449,9 +387,6 @@
             
             // Cambiar frase automáticamente cada 25 segundos
             setInterval(displayRandomPhrase, 25000);
-            
-            // Agregar sonido al botón
-            newPhraseButton.addEventListener('click', playClickSound);
             
             // Efecto especial al pasar el cursor sobre el botón
             newPhraseButton.addEventListener('mouseenter', function() {
